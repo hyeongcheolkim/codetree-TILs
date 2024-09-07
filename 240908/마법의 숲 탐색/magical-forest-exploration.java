@@ -34,6 +34,8 @@ public class Main {
             for(int j=1;j<=colSize;++j){
                 if(board[i][j] == -1)
                     System.out.print('X');
+                else if(isExit[i][j])
+                    System.out.print('E');
                 else
                     System.out.print(board[i][j]);
                 System.out.print(' ');
@@ -92,7 +94,9 @@ public class Main {
                 ++counter;
 
                 isExit[nowRow + rowDiff[nowDirection]][nowCol + colDiff[nowDirection]] = true;
-                answer += score(nowRow, nowCol);
+                int ret = score(nowRow, nowCol);
+                answer += ret;
+
             }
         }
         System.out.print(answer);
@@ -135,7 +139,7 @@ public class Main {
         int direction = initDirection;
 
         if(row == rowSize - 1)
-            return new int[]{row, col, initDirection};
+            return new int[]{row, col, direction};
 
         int[] dr = {-1,0,+1,+1,+2};
         int[] dc = {-1,-2,-2,-1,-1};
@@ -158,7 +162,7 @@ public class Main {
             }
         }
         if(moveable)
-            return move(row + 1, col - 1, (direction - 1 == 0) ? 3 : direction - 1);
+            return move(row + 1, col - 1, (direction - 1 == -1) ? 3 : direction - 1);
         return new int[] {row, col, direction};
     }
 
@@ -166,9 +170,8 @@ public class Main {
         int row = initRow;
         int col = initCol;
         int direction = initDirection;
-
         if(row == rowSize - 1)
-            return new int[]{row, col, initDirection};
+            return new int[]{row, col, direction};
 
         int[] dr = {-1,0,+1,+1,+2};
         int[] dc = {+1,+2,+2,+1,+1};
@@ -191,7 +194,7 @@ public class Main {
             }
         }
         if(moveable)
-            return move(row + 1, col + 1, ++direction % 4);
+            return move(row + 1, col + 1, (direction + 1) % 4);
         return new int[] {row, col, direction};
     }
 
