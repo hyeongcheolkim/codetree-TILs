@@ -69,7 +69,7 @@ public class Main {
 
     private void solve(){
         int q = Integer.parseInt(readLine());
-        Node rootNode = null;
+        List<Node> rootNodes = new ArrayList<>();
 
         while(q-- != 0){
             int[] input = Arrays.stream(readLine().split(" "))
@@ -84,7 +84,7 @@ public class Main {
                 if(p_id == -1){
                     Node node = new Node(m_id, color, max_depth);
                     nodes.put(m_id, node);
-                    rootNode = node;
+                    rootNodes.add(node);
                     continue;
                 }
                 Node parentNode = nodes.get(p_id);
@@ -109,8 +109,12 @@ public class Main {
                 System.out.println(nodes.get(m_id).color);
             }
             if(input[0] == 400){
-                TreeScoreCalculator tsc = new TreeScoreCalculator(rootNode);
-                System.out.println(tsc.score());
+                int acc = 0;
+                for(Node rootNode : rootNodes){
+                    TreeScoreCalculator tsc = new TreeScoreCalculator(rootNode);
+                    acc += tsc.score();
+                }
+                System.out.println(acc);
             }
         }
     }
