@@ -171,6 +171,8 @@ public class Main {
                 .mapToInt(e -> e.score)
                 .max()
                 .orElse(-1);
+        if(maxi == -1 || maxi == 0)
+            return;
 
         ScoreDetail maxiScoreDetail = score90Details.stream()
                     .filter(e -> e.score == maxi)
@@ -209,8 +211,7 @@ public class Main {
             });
             nextBoard = scoreDetail.nextBoard;
         }
-        if(score != 0)
-            System.out.print(String.valueOf(score) + ' ');
+        System.out.print(String.valueOf(score) + ' ');
         dfs(level+1, nextBoard);
     }
 
