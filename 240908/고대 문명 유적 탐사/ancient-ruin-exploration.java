@@ -171,25 +171,20 @@ public class Main {
                 .mapToInt(e -> e.score)
                 .max()
                 .orElse(-1);
-        if(maxi == -1)
-            return;
-        ScoreDetail maxiScoreDetail = null;
-        if(maxiScoreDetail == null)
-            maxiScoreDetail = score90Details.stream()
-                            .filter(e -> e.score == maxi)
-                            .findFirst()
-                            .orElse(null);
-        if(maxiScoreDetail == null)
-            maxiScoreDetail = score180Details.stream()
-                            .filter(e -> e.score == maxi)
-                            .findFirst()
-                            .orElse(null);
-        if(maxiScoreDetail == null)
-            maxiScoreDetail = score270Details.stream()
-                            .filter(e -> e.score == maxi)
-                            .findFirst()
-                            .orElse(null);
 
+        ScoreDetail maxiScoreDetail = score90Details.stream()
+                    .filter(e -> e.score == maxi)
+                    .findFirst()
+                    .orElseGet(() -> score180Details.stream()
+                                        .filter(e -> e.score == maxi)
+                                        .findFirst()
+                                        .orElseGet(() -> score270Details.stream()
+                                                                .filter(e -> e.score == maxi)
+                                                                .findFirst()
+                                                                .orElse(null)
+                            )
+                    );
+        
 
         List<int[]> arr = new ArrayList<>(maxiScoreDetail.pos);
         arr.sort((int[] a, int[] b) ->{
