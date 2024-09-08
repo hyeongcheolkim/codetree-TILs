@@ -171,7 +171,8 @@ public class Main {
                 .mapToInt(e -> e.score)
                 .max()
                 .orElse(-1);
-
+        if(maxi == -1)
+            return;
         ScoreDetail maxiScoreDetail = score90Details.stream()
                     .filter(e -> e.score == maxi)
                     .findFirst()
@@ -184,7 +185,7 @@ public class Main {
                                                                 .orElse(null)
                             )
                     );
-        if(maxi == -1 || maxiScoreDetail == null)
+        if(maxi == -1)
             return;
 
         List<int[]> arr = new ArrayList<>(maxiScoreDetail.pos);
