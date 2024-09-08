@@ -184,6 +184,8 @@ public class Main {
                                                                 .orElse(null)
                             )
                     );
+        if(maxi == -1 || maxiScoreDetail == null)
+            return;
 
         List<int[]> arr = new ArrayList<>(maxiScoreDetail.pos);
         arr.sort((int[] a, int[] b) ->{
