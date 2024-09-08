@@ -174,18 +174,21 @@ public class Main {
         if(maxi == -1)
             return;
         ScoreDetail maxiScoreDetail = null;
-        maxiScoreDetail = score90Details.stream()
-                        .filter(e -> e.score == maxi)
-                        .findFirst()
-                        .orElse(null);
-        maxiScoreDetail = score180Details.stream()
-                        .filter(e -> e.score == maxi)
-                        .findFirst()
-                        .orElse(null);
-        maxiScoreDetail = score270Details.stream()
-                        .filter(e -> e.score == maxi)
-                        .findFirst()
-                        .orElse(null);
+        if(maxiScoreDetail == null)
+            maxiScoreDetail = score90Details.stream()
+                            .filter(e -> e.score == maxi)
+                            .findFirst()
+                            .orElse(null);
+        if(maxiScoreDetail == null)
+            maxiScoreDetail = score180Details.stream()
+                            .filter(e -> e.score == maxi)
+                            .findFirst()
+                            .orElse(null);
+        if(maxiScoreDetail == null)
+            maxiScoreDetail = score270Details.stream()
+                            .filter(e -> e.score == maxi)
+                            .findFirst()
+                            .orElse(null);
 
 
         List<int[]> arr = new ArrayList<>(maxiScoreDetail.pos);
