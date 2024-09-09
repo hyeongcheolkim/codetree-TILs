@@ -23,7 +23,7 @@ public class Main {
         }
     }
 
-    private static int INF = Integer.MAX_VALUE/3;
+    private static int INF = Integer.MAX_VALUE / 3;
 
     private int[] calculateCost(){
         int[] cost = new int[n];
@@ -60,7 +60,7 @@ public class Main {
 
     private BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
     private List<List<int[]>> graph;
-    private Deque<Product> products = new ArrayDeque<>();
+    private List<Product> products = new ArrayList<>();
     private boolean[] isExistProduct = new boolean[30000 + 1];
 
     private String readLine(){
@@ -75,15 +75,6 @@ public class Main {
         Q = Integer.parseInt(readLine());
     }
 
-    private void printGraph(){
-        for(List<int[]> e : graph){
-            for(int[] val : e){
-                System.out.print(Arrays.toString(val) + " ");
-            }
-            System.out.println();
-        }
-    }
-
     private void solve(){
         int[] cost = null;
         while(Q-- != 0){
@@ -95,7 +86,6 @@ public class Main {
             if(oper == 100){
                 n = input[1];
                 m = input[2];
-
                 
                 graph = Stream.generate(() -> {return new ArrayList<int[]>();})
                             .limit(n)
@@ -128,19 +118,20 @@ public class Main {
             if(oper == 400){
                 boolean flag = true;
                 List<Product> tmp = new ArrayList<>();
+
+                // 유효한 상품만 남겨두기 위해 필터링
+                products = products.stream()
+                                   .filter(p -> isExistProduct[p.id])
+                                   .collect(Collectors.toList());
                 
-                List<Product> sortedProducts = new ArrayList<>(products);
-                sortedProducts.sort((Product a, Product b) -> {
+                products.sort((Product a, Product b) -> {
                     if(a.income == b.income)
                         return a.id - b.id;
                     return b.income - a.income;
                 });
 
-                products = new ArrayDeque<>(sortedProducts);
                 while(!products.isEmpty()){
-                    Product p = products.removeFirst();
-                    if(!isExistProduct[p.id])
-                        continue;
+                    Product p = products.remove(0);
                     if(p.income == INF || p.income < 0){
                         tmp.add(p);
                         continue;
@@ -150,20 +141,26 @@ public class Main {
                     flag = false;
                     break;
                 }
-                products.addAll(tmp);
-                if(flag)
+
+                // 판매 가능한 상품이 없을 때만 -1 출력
+                if(flag) {
                     System.out.println(-1);
+                }
+
+                // 남은 상품 다시 리스트에 저장
+                products.addAll(tmp);
             }
             if(oper == 500){
                 List<Product> tmp = new ArrayList<>();
-                while(!products.isEmpty()){
-                    Product p = products.poll();
-                    if(!isExistProduct[p.id])
-                        continue;
-                    tmp.add(p);
+                for(Product p : products){
+                    if(isExistProduct[p.id]){
+                        tmp.add(p);
+                    }
                 }
                 startCity = input[1];
                 cost = calculateCost();
+
+                products.clear();
 
                 for(Product p : tmp){
                     int income = (cost[p.dest] == INF ? INF : p.revenue - cost[p.dest]);
