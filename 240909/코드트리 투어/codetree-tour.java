@@ -4,13 +4,13 @@ import java.util.stream.*;
 
 public class Main {
 
-    static class Product {
+    static class Product{
         public int id;
         public int revenue;
         public int dest;
         public int income;
 
-        public Product(int id, int revenue, int dest, int income) {
+        public Product(int id, int revenue, int dest, int income){
             this.id = id;
             this.revenue = revenue;
             this.dest = dest;
@@ -18,37 +18,37 @@ public class Main {
         }
 
         @Override
-        public String toString() {
+        public String toString(){
             return String.format("[id=%d, revenue=%d, dest=%d, income=%d]", id, revenue, dest, income);
         }
     }
 
-    private static int INF = Integer.MAX_VALUE / 3;
+    private static int INF = Integer.MAX_VALUE/3;
 
-    private int[] calculateCost() {
+    private int[] calculateCost(){
         int[] cost = new int[n];
         Arrays.fill(cost, INF);
         PriorityQueue<int[]> pq = new PriorityQueue<>(Comparator.comparingInt(x -> x[1]));
 
-        pq.add(new int[] { startCity, 0 });
+        pq.add(new int[]{startCity, 0});
         cost[startCity] = 0;
 
-        while (!pq.isEmpty()) {
+        while(!pq.isEmpty()){
             int[] p = pq.poll();
             int in = p[0];
             int inCost = p[1];
 
-            if (cost[in] < inCost)
+            if(cost[in] < inCost)
                 continue;
-
-            for (int[] nowNode : graph.get(in)) {
+                
+            for(int[] nowNode : graph.get(in)){
                 int out = nowNode[0];
                 int outCost = nowNode[1];
 
                 int totalCost = inCost + outCost;
-                if (cost[out] > totalCost) {
+                if(cost[out] > totalCost){
                     cost[out] = totalCost;
-                    pq.add(new int[] { out, totalCost });
+                    pq.add(new int[]{out, totalCost});
                 }
             }
         }
@@ -60,90 +60,110 @@ public class Main {
 
     private BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
     private List<List<int[]>> graph;
-    private TreeMap<Integer, Product> productMap = new TreeMap<>();
+    private PriorityQueue<Product> products = new PriorityQueue<>((Product a, Product b) -> {
+        if(a.income == b.income)
+            return a.id - b.id;
+        return b.income - a.income;
+    });
     private boolean[] isExistProduct = new boolean[30000 + 1];
 
-    private String readLine() {
-        try {
+    private String readLine(){
+        try{
             return br.readLine();
-        } catch (Exception e) {
+        }catch(Exception e){
             throw new RuntimeException(e);
         }
     }
 
-    private void read() {
+    private void read(){
         Q = Integer.parseInt(readLine());
     }
 
-    private void solve() {
+    private void printGraph(){
+        for(List<int[]> e : graph){
+            for(int[] val : e){
+                System.out.print(Arrays.toString(val) + " ");
+            }
+            System.out.println();
+        }
+    }
+
+    private void solve(){
         int[] cost = null;
-        while (Q-- != 0) {
-            int[] input = Arrays.stream(readLine().split(" ")).mapToInt(Integer::parseInt).toArray();
+        while(Q-- != 0){
+            int[] input = Arrays.stream(readLine().split(" "))
+                                .mapToInt(Integer::parseInt)
+                                .toArray();
             int oper = input[0];
 
-            if (oper == 100) {
+            if(oper == 100){
                 n = input[1];
                 m = input[2];
 
-                graph = Stream.generate(() -> new ArrayList<int[]>()).limit(n).collect(Collectors.toList());
+                
+                graph = Stream.generate(() -> {return new ArrayList<int[]>();})
+                            .limit(n)
+                            .collect(Collectors.toList());
 
-                for (int i = 3; i < input.length; i += 3) {
+                for(int i=3; i<input.length; i+=3){
                     int v = input[i];
-                    int u = input[i + 1];
-                    int w = input[i + 2];
+                    int u = input[i+1];
+                    int w = input[i+2];
 
-                    graph.get(v).add(new int[] { u, w });
-                    graph.get(u).add(new int[] { v, w });
+                    graph.get(v).add(new int[]{u, w});
+                    graph.get(u).add(new int[]{v, w});
                 }
                 cost = calculateCost();
             }
-            if (oper == 200) {
+            if(oper == 200){
                 int id = input[1];
                 int revenue = input[2];
                 int dest = input[3];
                 int income = (cost[dest] == INF ? INF : revenue - cost[dest]);
 
-                Product product = new Product(id, revenue, dest, income);
-                productMap.put(id, product);
+                products.add(new Product(id, revenue, dest, income));
                 isExistProduct[id] = true;
             }
-            if (oper == 300) {
+            if(oper == 300){
                 int id = input[1];
-                productMap.remove(id);
                 isExistProduct[id] = false;
             }
-            if (oper == 400) {
+            if(oper == 400){
                 boolean flag = true;
                 List<Product> tmp = new ArrayList<>();
-
-                // 우선순위가 높은 상품 찾기 (이득이 가장 큰 상품)
-                for (Product product : productMap.values()) {
-                    if (!isExistProduct[product.id])
+                while(!products.isEmpty()){
+                    Product p = products.poll();
+                    if(!isExistProduct[p.id])
                         continue;
-                    if (product.income == INF || product.income < 0) {
-                        tmp.add(product);
+                    if(p.income == INF || p.income < 0){
+                        tmp.add(p);
                         continue;
                     }
-                    isExistProduct[product.id] = false;
-                    System.out.println(product.id);
-                    productMap.remove(product.id);
+                    isExistProduct[p.id] = false;
+                    System.out.println(p.id);
                     flag = false;
                     break;
                 }
-                if (flag) {
+                products.addAll(tmp);
+                if(flag)
                     System.out.println(-1);
-                }
             }
-            if (oper == 500) {
+            if(oper == 500){
+                List<Product> tmp = new ArrayList<>();
+                while(!products.isEmpty()){
+                    Product p = products.poll();
+                    if(!isExistProduct[p.id])
+                        continue;
+                    tmp.add(p);
+                }
                 startCity = input[1];
                 cost = calculateCost();
 
-                // 출발지 변경에 따른 상품 업데이트
-                for (Product product : productMap.values()) {
-                    if (isExistProduct[product.id]) {
-                        int income = (cost[product.dest] == INF ? INF : product.revenue - cost[product.dest]);
-                        product.income = income;
-                    }
+                for(Product p : tmp){
+                    int income = (cost[p.dest] == INF ? INF : p.revenue - cost[p.dest]);
+                    Product newProduct = new Product(p.id, p.revenue, p.dest, income);
+                    isExistProduct[p.id] = true;
+                    products.add(newProduct);
                 }
             }
         }
