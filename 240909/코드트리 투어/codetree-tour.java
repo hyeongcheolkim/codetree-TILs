@@ -65,7 +65,7 @@ public class Main {
             return a.id - b.id;
         return b.income - a.income;
     });
-    private Set<Integer> deletedProducts = new HashSet<>();
+    private Set<Integer> existProducts = new HashSet<>();
 
     private String readLine(){
         try{
@@ -121,22 +121,24 @@ public class Main {
                 int income = (cost[dest] == INF ? INF : revenue - cost[dest]);
 
                 products.add(new Product(id, revenue, dest, income));
+                existProducts.add(id);
             }
             if(oper == 300){
                 int id = input[1];
-                deletedProducts.add(id);
+                existProducts.remove(id);
             }
             if(oper == 400){
                 boolean flag = true;
                 List<Product> tmp = new ArrayList<>();
                 while(!products.isEmpty()){
                     Product p = products.poll();
-                    if(deletedProducts.contains(p.id))
+                    if(!existProducts.contains(p.id))
                         continue;
                     if(p.income == INF || p.income < 0){
                         tmp.add(p);
                         continue;
                     }
+                    existProducts.remove(p.id);
                     System.out.println(p.id);
                     flag = false;
                     break;
@@ -149,7 +151,7 @@ public class Main {
                 List<Product> tmp = new ArrayList<>();
                 while(!products.isEmpty()){
                     Product p = products.poll();
-                    if(deletedProducts.contains(p.id))
+                    if(!existProducts.contains(p.id))
                         continue;
                     tmp.add(p);
                 }
@@ -159,6 +161,7 @@ public class Main {
                 for(Product p : tmp){
                     int income = (cost[p.dest] == INF ? INF : p.revenue - cost[p.dest]);
                     Product newProduct = new Product(p.id, p.revenue, p.dest, income);
+                    existProducts.add(p.id);
                     products.add(newProduct);
                 }
             }
