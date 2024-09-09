@@ -60,11 +60,7 @@ public class Main {
 
     private BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
     private List<List<int[]>> graph;
-    private PriorityQueue<Product> products = new PriorityQueue<>((Product a, Product b) -> {
-        if(a.income == b.income)
-            return a.id - b.id;
-        return b.income - a.income;
-    });
+    private Deque<Product> products = new ArrayDeque<>();
     private boolean[] isExistProduct = new boolean[30000 + 1];
 
     private String readLine(){
@@ -114,6 +110,7 @@ public class Main {
                     graph.get(u).add(new int[]{v, w});
                 }
                 cost = calculateCost();
+                
             }
             if(oper == 200){
                 int id = input[1];
@@ -131,8 +128,17 @@ public class Main {
             if(oper == 400){
                 boolean flag = true;
                 List<Product> tmp = new ArrayList<>();
+                
+                List<Product> sortedProducts = new ArrayList<>(products);
+                sortedProducts.sort((Product a, Product b) -> {
+                    if(a.income == b.income)
+                        return a.id - b.id;
+                    return b.income - a.income;
+                });
+
+                products = new ArrayDeque<>(sortedProducts);
                 while(!products.isEmpty()){
-                    Product p = products.poll();
+                    Product p = products.removeFirst();
                     if(!isExistProduct[p.id])
                         continue;
                     if(p.income == INF || p.income < 0){
