@@ -65,6 +65,8 @@ public class Main {
             return a.id - b.id;
         return b.income - a.income;
     });
+    private List<Product> unreachableProducts = new ArrayList<>();
+
     private boolean[] isExistProduct = new boolean[30000 + 1];
 
     private String readLine(){
@@ -121,7 +123,11 @@ public class Main {
                 int dest = input[3];
                 int income = (cost[dest] == INF ? INF : revenue - cost[dest]);
 
-                products.add(new Product(id, revenue, dest, income));
+
+                if(income == INF || income < 0)
+                    unreachableProducts.add(new Product(id, revenue, dest, income));
+                else
+                    products.add(new Product(id, revenue, dest, income));
                 isExistProduct[id] = true;
             }
             if(oper == 300){
@@ -130,21 +136,16 @@ public class Main {
             }
             if(oper == 400){
                 boolean flag = true;
-                List<Product> tmp = new ArrayList<>();
+                
                 while(!products.isEmpty()){
                     Product p = products.poll();
                     if(!isExistProduct[p.id])
                         continue;
-                    if(p.income == INF || p.income < 0){
-                        tmp.add(p);
-                        continue;
-                    }
                     isExistProduct[p.id] = false;
                     System.out.println(p.id);
                     flag = false;
                     break;
                 }
-                products.addAll(tmp);
                 if(flag)
                     System.out.println(-1);
             }
@@ -159,12 +160,30 @@ public class Main {
                 startCity = input[1];
                 cost = calculateCost();
 
-                for(Product p : tmp){
+                List<Product> tmpUnreachableProducts = new ArrayList<>();
+                for(Product p : unreachableProducts){
+                    int id = p.id;
+                    int revenue = p.revenue;
+                    int dest = p.dest;
                     int income = (cost[p.dest] == INF ? INF : p.revenue - cost[p.dest]);
-                    Product newProduct = new Product(p.id, p.revenue, p.dest, income);
-                    isExistProduct[p.id] = true;
-                    products.add(newProduct);
+
+                    if(income == INF || income < 0)
+                        tmpUnreachableProducts.add(new Product(id, revenue, dest, income));
+                    else
+                        products.add(new Product(id, revenue, dest, income));
                 }
+                for(Product p : tmp){
+                    int id = p.id;
+                    int revenue = p.revenue;
+                    int dest = p.dest;
+                    int income = (cost[p.dest] == INF ? INF : p.revenue - cost[p.dest]);
+
+                    if(income == INF || income < 0)
+                        tmpUnreachableProducts.add(new Product(id, revenue, dest, income));
+                    else
+                        products.add(new Product(id, revenue, dest, income));
+                }
+                unreachableProducts = tmpUnreachableProducts;
             }
         }
     }
