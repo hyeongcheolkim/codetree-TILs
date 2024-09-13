@@ -106,8 +106,8 @@ public class Main {
                                 ++cnt;
                         }
                         if(sushiT > seatT){
-                            int dist = (sushiX - seatX + L)%L;
-                            // System.out.println(String.format("%s %d %d  [%d %d]",name, dist, time, sushiX, sushiT));
+                            int dist = (seatX - sushiX + L)%L;
+                            // System.out.println(String.format("%s %d %d  [%d %d %d]",name, dist, time, sushiX, seatX, sushiT));
                             if(dist <= time - sushiT)
                                 ++cnt;
                         }
