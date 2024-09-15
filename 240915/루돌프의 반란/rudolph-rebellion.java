@@ -245,9 +245,10 @@ public class Main {
                     board[nr][nc] = i;
                     santaLocations.put(i, new int[]{nr, nc});
                 }
+                if(exitCount == p)
+                    break;
             }
-            if(exitCount == p)
-                break;
+
             for(int i=1;i<=p;++i){
                 int[] loc = santaLocations.get(i);
                 if(loc[0] != -1 && loc[1] != -1)
