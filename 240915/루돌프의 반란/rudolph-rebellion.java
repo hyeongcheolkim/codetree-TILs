@@ -45,6 +45,7 @@ public class Main {
         int[] rodolphLocation = new int[]{Rr, Rc};
         Map.Entry<Integer, int[]> targetEntry = santaLocations.entrySet()
                     .stream()
+                    .filter(x -> x.getValue()[0] != -1 && x.getValue()[0] != -1)
                     .sorted((Map.Entry<Integer, int[]> a, Map.Entry<Integer, int[]> b) -> {
                         int aDistance = distance(rodolphLocation, a.getValue());
                         int bDistance = distance(rodolphLocation, b.getValue());
@@ -245,8 +246,10 @@ public class Main {
                     board[nr][nc] = i;
                     santaLocations.put(i, new int[]{nr, nc});
                 }
-                if(exitCount == p)
+                if(exitCount == p){
+                    System.out.println("exit!");
                     break;
+                }
             }
 
             for(int i=1;i<=p;++i){
