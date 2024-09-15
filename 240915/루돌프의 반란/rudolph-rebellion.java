@@ -248,7 +248,6 @@ public class Main {
                 }
             }
             if(exitCount == p){
-                System.out.println("exit!");
                 break;
             }
 
