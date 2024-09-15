@@ -45,7 +45,7 @@ public class Main {
         int[] rodolphLocation = new int[]{Rr, Rc};
         Map.Entry<Integer, int[]> targetEntry = santaLocations.entrySet()
                     .stream()
-                    .filter(x -> x.getValue()[0] != -1 && x.getValue()[0] != -1)
+                    .filter(x -> x.getValue()[0] != -1 && x.getValue()[1] != -1)
                     .sorted((Map.Entry<Integer, int[]> a, Map.Entry<Integer, int[]> b) -> {
                         int aDistance = distance(rodolphLocation, a.getValue());
                         int bDistance = distance(rodolphLocation, b.getValue());
