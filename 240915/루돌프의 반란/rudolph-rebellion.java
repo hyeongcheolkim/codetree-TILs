@@ -224,6 +224,10 @@ public class Main {
             board[Rr][Rc] = -1;
 
             for(int i=1;i<=p;++i){
+                if(exitCount == p){
+                    System.out.println("exit!");
+                    break;
+                }
                 if(turn <= stun.get(i)){
                     // System.out.println("Santa stun" + String.valueOf(i));
                     continue;
@@ -245,10 +249,6 @@ public class Main {
                 }else{
                     board[nr][nc] = i;
                     santaLocations.put(i, new int[]{nr, nc});
-                }
-                if(exitCount == p){
-                    System.out.println("exit!");
-                    break;
                 }
             }
 
