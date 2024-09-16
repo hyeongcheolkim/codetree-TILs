@@ -1,5 +1,5 @@
-import java.util.*;
 import java.io.*;
+import java.util.*;
 import java.util.stream.*;
 
 public class Main {
@@ -39,21 +39,28 @@ public class Main {
     void printBoard(){
         for(int i=1;i<=L;++i){
             for(int j=1;j<=L;++j){
-                System.out.print(board[i][j]);
+                if(board[i][j] == -1)
+                    System.out.print(0);
+                else if(board[i][j] == -2)
+                    System.out.print('X');
+                else
+                    System.out.print(board[i][j]);
                 System.out.print(' ');
             }
             System.out.println();
         }
+        System.out.println();
     }
 
     void printTrapBoard(){
         for(int i=1;i<=L;++i){
             for(int j=1;j<=L;++j){
-                System.out.print(trapBoard[i][j] ? 'O' : 'X');
+                System.out.print(trapBoard[i][j] ? 'T' : 'O');
                 System.out.print(' ');
             }
             System.out.println();
         }
+        System.out.println();
     }
 
     int countTrap(int r, int c, int h, int w){
@@ -156,7 +163,6 @@ public class Main {
             initHealth.put(n, k);
             fillBoard(n, r, c, h, w);
         }
-
         for(int x=0;x<Q;++x){
             int[] oper = Arrays.stream(readLine().split(" "))
                             .mapToInt(Integer::parseInt)
@@ -212,3 +218,5 @@ public class Main {
         main.solve();
     }
 }
+
+// 0위 1오른쪽 2아래쪽 3왼쪽
