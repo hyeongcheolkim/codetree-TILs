@@ -186,11 +186,21 @@ public class Main {
                     int w = knightsHWValue[1];
                     int r = knightLocation[0];
                     int c = knightLocation[1];
+                    
+                    fillBoardWithVal(n, r, c, h, w, 0);
+                }
+                for(int n : targetKnights){
+                    int[] knightsHWValue = knightsHW.get(n);
+                    int[] knightLocation = knights.get(n);
+
+                    int h = knightsHWValue[0];
+                    int w = knightsHWValue[1];
+                    int r = knightLocation[0];
+                    int c = knightLocation[1];
 
                     int nr = r + dr[d];
                     int nc = c + dc[d];
 
-                    fillBoardWithVal(n, r, c, h, w, 0);
                     fillBoard(n, nr, nc, h, w);
                     knights.put(n, new int[]{nr, nc});
                     if(i == n)
