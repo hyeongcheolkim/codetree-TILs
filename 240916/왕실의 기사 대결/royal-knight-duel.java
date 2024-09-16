@@ -115,22 +115,8 @@ public class Main {
                 flag &= move(board[tr][tc], d, moveTargets);
             }
         }
-        if(!flag)
-            return false;
 
-        fillBoardWithVal(n, r, c, h, w, 0);
-        fillBoard(n, nr, nc, h, w);
-        knights.put(n, new int[]{nr, nc});
-        if(moveTargets.get(0) == n)
-            return true;
-
-        int cnt = countTrap(nr, nc, h, w);
-        health.merge(n, -cnt, Integer::sum);
-        if(health.get(n) <= 0){
-            fillBoardWithVal(n, nr, nc, h, w, 0);
-            health.remove(n);
-        }
-        return true;
+        return flag;
     }
 
     void solve(){
@@ -179,9 +165,38 @@ public class Main {
             int d = oper[1];
 
             if(health.containsKey(i)){
-                List<Integer> tmp = new ArrayList<>();
-                tmp.add(i);
-                move(i, d, tmp);
+                List<Integer> targetKnights = new ArrayList<>();
+                targetKnights.add(i);
+                boolean movable = move(i, d, targetKnights);
+
+                if(!movable)
+                    continue;
+                
+                for(int n : targetKnights){
+                    int[] knightsHWValue = knightsHW.get(n);
+                    int[] knightLocation = knights.get(n);
+
+                    int h = knightsHWValue[0];
+                    int w = knightsHWValue[1];
+                    int r = knightLocation[0];
+                    int c = knightLocation[1];
+
+                    int nr = r + dr[d];
+                    int nc = c + dc[d];
+
+                    fillBoardWithVal(n, r, c, h, w, 0);
+                    fillBoard(n, nr, nc, h, w);
+                    knights.put(n, new int[]{nr, nc});
+                    if(i == n)
+                        continue;
+
+                    int cnt = countTrap(nr, nc, h, w);
+                    health.merge(n, -cnt, Integer::sum);
+                    if(health.get(n) <= 0){
+                        fillBoardWithVal(n, nr, nc, h, w, 0);
+                        health.remove(n);
+                    }
+                }
             }
         }
 
