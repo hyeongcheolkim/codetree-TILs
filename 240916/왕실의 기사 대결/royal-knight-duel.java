@@ -65,7 +65,7 @@ public class Main {
         return ret;
     }
 
-    boolean move(int n, int d, int firstN){
+    boolean move(int n, int d, List<Integer> moveTargets){
         int[] knightsHWValue = knightsHW.get(n);
         int[] knightLocation = knights.get(n);
 
@@ -110,8 +110,10 @@ public class Main {
             int tr = target[0];
             int tc = target[1];
 
-            if(board[tr][tc] >= 1)
-                flag &= move(board[tr][tc], d, firstN);
+            if(board[tr][tc] >= 1 && !moveTargets.contains(board[tr][tc])){
+                moveTargets.add(board[tr][tc]);
+                flag &= move(board[tr][tc], d, moveTargets);
+            }
         }
         if(!flag)
             return false;
@@ -119,7 +121,7 @@ public class Main {
         fillBoardWithVal(n, r, c, h, w, 0);
         fillBoard(n, nr, nc, h, w);
         knights.put(n, new int[]{nr, nc});
-        if(firstN == n)
+        if(moveTargets.get(0) == n)
             return true;
 
         int cnt = countTrap(nr, nc, h, w);
@@ -150,8 +152,7 @@ public class Main {
         }
         for(int i=1;i<=L;++i)
             for(int j=1;j<=L;++j)
-                if(board[i][j] == -1)
-                    trapBoard[i][j] = true;
+                trapBoard[i][j] = (board[i][j] == -1);
         for(int n=1;n<=N;++n){
             int[] line = Arrays.stream(readLine().split(" "))
                             .mapToInt(Integer::parseInt)
@@ -177,8 +178,11 @@ public class Main {
             int i = oper[0];
             int d = oper[1];
 
-            if(health.containsKey(i))
-                move(i, d, i);
+            if(health.containsKey(i)){
+                List<Integer> tmp = new ArrayList<>();
+                tmp.add(i);
+                move(i, d, tmp);
+            }
         }
 
         int damage = 0;
