@@ -22,7 +22,7 @@ public class Main {
     Map<Integer, int[]> knightsHW = new HashMap<>();
     Map<Integer, int[]> knights = new HashMap<>();
 
-    int[] dr = new int[]{+1,0,-1,0};
+    int[] dr = new int[]{-1,0,+1,0};
     int[] dc = new int[]{0,+1,0,-1};
 
     void fillBoard(int num, int r, int c, int h, int w){
@@ -31,8 +31,9 @@ public class Main {
 
     void fillBoardWithVal(int num, int r, int c, int h, int w, int val){
         for(int i=r;i<r+h;++i)
-            for(int j=c;j<c+w;++j)
+            for(int j=c;j<c+w;++j){
                 board[i][j] = val;
+            }
     }
 
     void printBoard(){
@@ -168,7 +169,7 @@ public class Main {
             initHealth.put(n, k);
             fillBoard(n, r, c, h, w);
         }
-        
+
         for(int x=0;x<Q;++x){
             int[] oper = Arrays.stream(readLine().split(" "))
                             .mapToInt(Integer::parseInt)
