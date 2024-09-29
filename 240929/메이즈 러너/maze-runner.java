@@ -16,6 +16,7 @@ public class Main {
     int N, M, K;
     int[][] maze;
     int answer = 0;
+    int exitCnt = 0;
     int[] exit;
 
     static int[] dr = {+1,-1,0,0};
@@ -57,6 +58,8 @@ public class Main {
                         ++nextMaze[r][c];
                         if(nextMaze[nr][nc] <= 0)
                             --nextMaze[nr][nc];
+                        if(nextMaze[nr][nc] == 100)
+                            --exitCnt;
                         ++cnt;
                     }
                 }
@@ -80,8 +83,9 @@ public class Main {
         for(int i=0;i<size;++i)
             for(int j=0;j<size;++j){
                 maze[row+i][col+j] = newSquare[i][j];
-                if(0<maze[row+i][col+j] && maze[row+i][col+j]<10)
+                if(0<maze[row+i][col+j] && maze[row+i][col+j]<10){
                     --maze[row+i][col+j];
+                }
                 if(maze[row+i][col+j] == 100)
                     exit = new int[]{row+i,col+j};
             }
@@ -109,7 +113,6 @@ public class Main {
 
                     if(containsHuman(row, col, size)){
                         rotateSquare(row, col, size);
-                        System.out.println(String.format("row:%d, col:%d, size:%d", row, col , size));
                         return;
                     }
                 }
@@ -126,6 +129,7 @@ public class Main {
         N = input[0];
         M = input[1];
         K = input[2];
+        exitCnt = M;
 
         maze = new int[N+1][N+1];
 
@@ -164,21 +168,19 @@ public class Main {
     }
 
     void solve(){
-        move();
-        rotateMaze();
-        move();
-        rotateMaze();
-        move();
-        
-
-        printMaze();
-        System.out.print(answer);
+        while(K-- != 0){
+            move();
+            rotateMaze();
+            if(exitCnt <= 0)
+                break;
+        }
+        System.out.println(answer);
+        System.out.print(String.format("%d %d", exit[0], exit[1]));
     }
 
     public static void main(String[] args) {
         Main main = new Main();
         main.init();
         main.solve();
-
     }
 }
