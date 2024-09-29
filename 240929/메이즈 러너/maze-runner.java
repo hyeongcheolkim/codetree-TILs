@@ -16,7 +16,7 @@ public class Main {
     int N, M, K;
     int[][] maze;
     int answer = 0;
-    int exitCnt = 0;
+    int exitCnt;
     int[] exit;
 
     static int[] dr = {+1,-1,0,0};
@@ -40,27 +40,29 @@ public class Main {
             for(int c=1;c<=N;++c){
                 if(maze[r][c] >= 0)
                     continue;
-                int targetDist = calculateDistance(new int[]{r, c}, exit);
+                for(int i=0;i<-maze[r][c];++i){
+                    int targetDist = calculateDistance(new int[]{r, c}, exit);
 
-                for(int direction = 0;direction<4;++direction){
-                    int nr = r + dr[direction];
-                    int nc = c + dc[direction];
+                    for(int direction = 0;direction<4;++direction){
+                        int nr = r + dr[direction];
+                        int nc = c + dc[direction];
 
-                    if(!(1<=nr && nr<=N && 1<=nc && nc<=N))
-                        continue;
-                    if(0 < maze[nr][nc] && maze[nr][nc] < 10)
-                        continue;
-                    
-                    int dist = calculateDistance(new int[]{nr,nc}, exit);
+                        if(!(1<=nr && nr<=N && 1<=nc && nc<=N))
+                            continue;
+                        if(0 < maze[nr][nc] && maze[nr][nc] < 10)
+                            continue;
+                        
+                        int dist = calculateDistance(new int[]{nr,nc}, exit);
 
-                    if(dist < targetDist){
-                        targetDist = dist;
-                        ++nextMaze[r][c];
-                        if(nextMaze[nr][nc] <= 0)
-                            --nextMaze[nr][nc];
-                        if(nextMaze[nr][nc] == 100)
-                            --exitCnt;
-                        ++cnt;
+                        if(dist < targetDist){
+                            targetDist = dist;
+                            ++nextMaze[r][c];
+                            if(maze[nr][nc] <= 0)
+                                --nextMaze[nr][nc];
+                            if(maze[nr][nc] == 100)
+                                --exitCnt;
+                            ++cnt;
+                        }
                     }
                 }
             }
@@ -108,7 +110,7 @@ public class Main {
                     int row = exit[0] - i;
                     int col = exit[1] - j;
 
-                    if(!(1<= row && row <= N - size && 1<=col && col <= N - size))
+                    if(!(1<= row && row <= N - size + 1 && 1<=col && col <= N - size + 1))
                         continue;
 
                     if(containsHuman(row, col, size)){
@@ -165,15 +167,22 @@ public class Main {
                 System.out.print(maze[i][j] + " ");
             System.out.println();
         }
+        System.out.println();
     }
 
     void solve(){
+        // printMaze();
         while(K-- != 0){
             move();
+            // System.out.println(answer);
             rotateMaze();
-            if(exitCnt <= 0)
+            // printMaze();
+            if(exitCnt <= 0){
                 break;
+            }
         }
+
+
         System.out.println(answer);
         System.out.print(String.format("%d %d", exit[0], exit[1]));
     }
