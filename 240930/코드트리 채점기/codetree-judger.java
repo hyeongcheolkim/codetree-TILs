@@ -9,35 +9,67 @@ public class Main {
     static List<Executor> executors = new ArrayList<>();
     static PriorityQueue<Executor> runnableExecutors = new PriorityQueue<>();
 
-    static Map<String, Integer> startTimes = new HashMap<>();
-    static Map<String, Integer> endTimes = new HashMap<>();
+    static Map<Integer, Integer> startTimes = new HashMap<>();
+    static Map<Integer, Integer> endTimes = new HashMap<>();
     static Set<Integer> onExecutingDomains = new HashSet<>();
 
-    static class TaskWaitQueue{
+    static class WaitTaskQueue{
+        static private Map<Integer, PriorityQueue<Task>> m = new HashMap<>();
+        static private int size = 0;
 
-        private int size = 0;
-        private Map<Task, PriorityQueue<Task>> tasks;
-
-        public int size(){
-            return this.size;
+        static public int size(){
+            return size;
         }
 
-        public void add(Task task){
-            tasks.computeIfAbsent(task, new PriorityQueue<>())
-                    .add(task.number);
-            ++size;
-        }
-
-        public Task poll(int time){
-            for(int domainHash : DomainHash.hashValues()){
-                
-
-                for(PriorityQueue<Task> pq : tasks.getOrDefault(val)){
-
-                }
+        static void print(){
+            for(Map.Entry<Integer, PriorityQueue<Task>> e : m.entrySet()){
+                int domainHash = e.getKey();
+                PriorityQueue<Task> pq = e.getValue();
+                pq.stream().forEach(x -> System.out.println(x));
             }
         }
 
+        static public void add(Task task){
+            PriorityQueue<Task> pq = m.computeIfAbsent(task.domainHash, (key) -> new PriorityQueue<Task>());
+            if(pq.contains(task))
+                return;
+            pq.add(task);
+            ++size;
+        }
+
+        static public Task poll(int time){
+            Task ret = null;
+            for(Map.Entry<Integer, PriorityQueue<Task>> e : m.entrySet()){
+                int domainHash = e.getKey();
+                PriorityQueue<Task> pq = e.getValue();
+
+                if(onExecutingDomains.contains(domainHash))
+                    continue;
+
+                Integer startTime = startTimes.get(domainHash);
+                Integer endTime = endTimes.get(domainHash);
+                if(startTime != null && endTime != null){
+                    int gap = endTime - startTime;
+                    if(time < startTime + 3 * gap){
+                        continue;
+                    }
+                }
+                Task task = pq.peek();
+                if(ret == null){
+                    ret = task;
+                    continue;
+                }
+                if(task.compareTo(ret) < 0){
+                    ret = task;
+                }
+                
+            }
+            if(ret != null){
+                m.get(ret.domainHash).poll();
+                --size;
+            }
+            return ret;
+        }
     }
 
     static class DomainHash{
@@ -50,10 +82,6 @@ public class Main {
 
         public static Integer of(Task task){
             return m.computeIfAbsent(task.domain, (key)-> ++idx);
-        }
-
-        public int[] hashValues(){
-            return this.m.values();
         }
     }
 
@@ -74,18 +102,14 @@ public class Main {
 
             this.domain = tmp[0];
             this.number = Integer.parseInt(tmp[1]);
-
             this.domainHash = DomainHash.of(domain);
         }
 
-        @Override
-        public int hashCode(){
-            return domainHash;
-        }
 
         @Override
         public boolean equals(Object o){
-            return this.domainHash == ((Task) o).domainHash;
+            Task t = (Task) o;
+            return this.domainHash == t.domainHash && this.number == t.number;
         }
 
         @Override
@@ -140,17 +164,6 @@ public class Main {
         }
     }
 
-    void printTaskWaitQueue(){
-        List<Task> tmp = new ArrayList<>();
-
-        while(!taskWaitQueue.isEmpty()){
-            Task task = taskWaitQueue.poll();
-            System.out.println(task);
-            tmp.add(task);
-        }
-        taskWaitQueue.addAll(tmp);
-    }
-
     String readLine(){
         try{
             return br.readLine();
@@ -180,7 +193,7 @@ public class Main {
                     runnableExecutors.add(executors.get(i));
                 
                 Task task = new Task(1, u0, 0);
-                taskWaitQueue.add(task);
+                WaitTaskQueue.add(task);
                                 // printTaskWaitQueue();
             }
 
@@ -190,9 +203,7 @@ public class Main {
                 String u = line[3];
 
                 Task task = new Task(p, u, t);
-                if(taskWaitQueue.stream().anyMatch(x -> x.domainHash == task.domainHash && x.number == task.number))
-                    continue;
-                taskWaitQueue.add(task);
+                WaitTaskQueue.add(task);
             }
 
             if(oper == 300){
@@ -200,33 +211,16 @@ public class Main {
 
                 if(runnableExecutors.isEmpty())
                     continue;
+                if(WaitTaskQueue.size() == 0)
+                    continue;
 
-                List<Task> tmp = new ArrayList<>();
-                while(!taskWaitQueue.isEmpty()){
-                    Task task = taskWaitQueue.poll();
-
-                    if(onExecutingDomains.contains(task.domainHash)){
-                        tmp.add(task);
-                        continue;
-                    }
-
-                    Integer s = startTimes.get(task);
-                    Integer e = endTimes.get(task);
-
-
-                    if(s != null && e != null){
-                        int gap = e - s;
-                        if(t < s + 3 * gap){
-                            tmp.add(task);
-                            continue;
-                        }
-                    }
-
-                    Executor exe = runnableExecutors.poll();
-                    exe.execute(task, t);
-                    break;
+                Task task = WaitTaskQueue.poll(t);
+                if(task == null){
+                    continue;
                 }
-                taskWaitQueue.addAll(tmp);
+
+                Executor exe = runnableExecutors.poll();
+                exe.execute(task, t);
             }
 
             if(oper == 400){
@@ -240,8 +234,7 @@ public class Main {
 
             if(oper == 500){
                 int t = Integer.parseInt(line[1]);
-
-                System.out.println(taskWaitQueue.size());
+                System.out.println(WaitTaskQueue.size());
             }
 
         }
