@@ -43,6 +43,8 @@ public class Main {
                 int domainHash = e.getKey();
                 PriorityQueue<Task> pq = e.getValue();
 
+                if(pq.isEmpty())
+                    continue;
                 if(onExecutingDomains.contains(domainHash))
                     continue;
 
