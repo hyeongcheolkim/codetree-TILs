@@ -10,7 +10,7 @@ public class Main {
     static Map<Task, Integer> startTimes = new HashMap<>();
     static Map<Task, Integer> endTimes = new HashMap<>();
     static Set<Task> onExecutingTasks = new HashSet<>();
-    static PriorityQueue<Task> taskWaitQueue = new PriorityQueue<Task>();
+    static List<Task> taskWaitQueue = new ArrayList<>();
 
     static String extractDomainFromUrl(String url){
         String[] tmp = url.split("/");
@@ -93,14 +93,6 @@ public class Main {
     }
 
     void printTaskWaitQueue(){
-        List<Task> tmp = new ArrayList<>();
-
-        while(!taskWaitQueue.isEmpty()){
-            Task task = taskWaitQueue.poll();
-            System.out.println(task);
-            tmp.add(task);
-        }
-        taskWaitQueue.addAll(tmp);
     }
 
     String readLine(){
@@ -145,7 +137,7 @@ public class Main {
             }
 
             if(oper == 300){
-                int t = Integer.parseInt(line[1]);
+                final int t = Integer.parseInt(line[1]);
 
                 List<Executor> li = executors.stream()
                         .skip(1)
@@ -157,32 +149,26 @@ public class Main {
                     continue;
                 Executor exe = li.get(0);
 
-                List<Task> tmp = new ArrayList<>();
-                while(!taskWaitQueue.isEmpty()){
-                    Task task = taskWaitQueue.poll();
-
-                    if(onExecutingTasks.contains(task)){
-                        tmp.add(task);
-                        continue;
-                    }
-
-                    Integer s = startTimes.get(task);
-                    Integer e = endTimes.get(task);
-
-
-                    // System.out.println(String.format("task:%s s:%d e:%d", task, s, e));
-                    if(s != null && e != null){
-                        int gap = e - s;
-                        if(t < s + 3 * gap){
-                            tmp.add(task);
-                            continue;
-                        }
-                    }
-
-                    exe.execute(task, t);
-                    break;
-                }
-                taskWaitQueue.addAll(tmp);
+                List<Task> tasks = taskWaitQueue.stream()
+                            .filter(x -> {
+                                Integer s = startTimes.get(x);
+                                Integer e = endTimes.get(x);
+                                if(s != null && e != null){
+                                    int gap = e - s;
+                                    return !(t < s + 3 * gap);
+                                }
+                                return true;
+                            })
+                            .filter(x -> !onExecutingTasks.contains(x))
+                            .sorted()
+                            .collect(Collectors.toList());
+                if(tasks.isEmpty())
+                    continue;
+                Task targetTask = tasks.get(0);
+                taskWaitQueue = taskWaitQueue.stream()
+                                            .filter(x -> x.enterQueueTime != targetTask.enterQueueTime)
+                                            .collect(Collectors.toList());
+                exe.execute(targetTask, t);
             }
 
             if(oper == 400){
