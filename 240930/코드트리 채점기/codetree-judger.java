@@ -7,10 +7,38 @@ public class Main {
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
     static List<Executor> executors = new ArrayList<>();
-    static Map<Task, Integer> startTimes = new HashMap<>();
-    static Map<Task, Integer> endTimes = new HashMap<>();
-    static Set<Task> onExecutingTasks = new HashSet<>();
-    static PriorityQueue<Task> taskWaitQueue = new PriorityQueue<Task>();
+    static PriorityQueue<Executor> runnableExecutors = new PriorityQueue<>();
+
+    static Map<String, Integer> startTimes = new HashMap<>();
+    static Map<String, Integer> endTimes = new HashMap<>();
+    static Set<Integer> onExecutingDomains = new HashSet<>();
+
+    static class TaskWaitQueue{
+
+        private int size = 0;
+        private Map<Task, PriorityQueue<Task>> tasks;
+
+        public int size(){
+            return this.size;
+        }
+
+        public void add(Task task){
+            tasks.computeIfAbsent(task, new PriorityQueue<>())
+                    .add(task.number);
+            ++size;
+        }
+
+        public Task poll(int time){
+            for(int domainHash : DomainHash.hashValues()){
+                
+
+                for(PriorityQueue<Task> pq : tasks.getOrDefault(val)){
+
+                }
+            }
+        }
+
+    }
 
     static class DomainHash{
         private final static Map<String, Integer> m = new HashMap<>();
@@ -22,6 +50,10 @@ public class Main {
 
         public static Integer of(Task task){
             return m.computeIfAbsent(task.domain, (key)-> ++idx);
+        }
+
+        public int[] hashValues(){
+            return this.m.values();
         }
     }
 
@@ -84,16 +116,16 @@ public class Main {
 
         void execute(Task task, int startTime){
             this.task = task;
-            onExecutingTasks.add(task);
-            startTimes.put(task, startTime);
+            onExecutingDomains.add(task.domainHash);
+            startTimes.put(task.domainHash, startTime);
             // System.out.println(String.format("[exe]exe:%s task:%s", this, task));
         }
 
         void done(int endTime){
             if(this.task == null)
                 return;
-            endTimes.put(task, endTime);
-            onExecutingTasks.remove(task);
+            endTimes.put(task.domainHash, endTime);
+            onExecutingDomains.remove(task.domainHash);
             this.task = null;
         }
 
@@ -143,6 +175,9 @@ public class Main {
                 executors = IntStream.range(0, N+1)
                             .mapToObj((idx) -> new Executor(idx))
                             .collect(Collectors.toList());
+                    
+                for(int i=1;i<=N;++i)
+                    runnableExecutors.add(executors.get(i));
                 
                 Task task = new Task(1, u0, 0);
                 taskWaitQueue.add(task);
@@ -163,21 +198,14 @@ public class Main {
             if(oper == 300){
                 int t = Integer.parseInt(line[1]);
 
-                List<Executor> li = executors.stream()
-                        .skip(1)
-                        .filter(exe -> exe.task == null)
-                        .sorted(Comparator.comparingInt(x -> x.id))
-                        .collect(Collectors.toList());
-                
-                if(li.isEmpty())
+                if(runnableExecutors.isEmpty())
                     continue;
-                Executor exe = li.get(0);
 
                 List<Task> tmp = new ArrayList<>();
                 while(!taskWaitQueue.isEmpty()){
                     Task task = taskWaitQueue.poll();
 
-                    if(onExecutingTasks.contains(task)){
+                    if(onExecutingDomains.contains(task.domainHash)){
                         tmp.add(task);
                         continue;
                     }
@@ -186,7 +214,6 @@ public class Main {
                     Integer e = endTimes.get(task);
 
 
-                    // System.out.println(String.format("task:%s s:%d e:%d", task, s, e));
                     if(s != null && e != null){
                         int gap = e - s;
                         if(t < s + 3 * gap){
@@ -195,6 +222,7 @@ public class Main {
                         }
                     }
 
+                    Executor exe = runnableExecutors.poll();
                     exe.execute(task, t);
                     break;
                 }
@@ -207,13 +235,13 @@ public class Main {
 
                 Executor exe = executors.get(J_id);
                 exe.done(t);
+                runnableExecutors.add(exe);
             }
 
             if(oper == 500){
                 int t = Integer.parseInt(line[1]);
 
                 System.out.println(taskWaitQueue.size());
-                // printTaskWaitQueue();
             }
 
         }
