@@ -10,7 +10,6 @@ public class Main {
     static Map<Task, Integer> startTimes = new HashMap<>();
     static Map<Task, Integer> endTimes = new HashMap<>();
     static Set<Task> onExecutingTasks = new HashSet<>();
-    static PriorityQueue<Executor> runnableExecutors = new PriorityQueue<Executor>();
     static PriorityQueue<Task> taskWaitQueue = new PriorityQueue<Task>();
 
     static String extractDomainFromUrl(String url){
@@ -61,8 +60,6 @@ public class Main {
 
         Executor(Integer id){
             this.id = id;
-            if(id >= 1)
-                runnableExecutors.add(this);
         }
 
         boolean isFree(){
@@ -81,7 +78,6 @@ public class Main {
                 return;
             endTimes.put(task, endTime);
             onExecutingTasks.remove(task);
-            runnableExecutors.add(this);
             this.task = null;
         }
 
@@ -151,8 +147,15 @@ public class Main {
             if(oper == 300){
                 int t = Integer.parseInt(line[1]);
 
-                if(runnableExecutors.isEmpty())
+                List<Executor> li = executors.stream()
+                        .skip(1)
+                        .filter(exe -> exe.task == null)
+                        .sorted(Comparator.comparingInt(x -> x.id))
+                        .collect(Collectors.toList());
+                
+                if(li.isEmpty())
                     continue;
+                Executor exe = li.get(0);
 
                 List<Task> tmp = new ArrayList<>();
                 while(!taskWaitQueue.isEmpty()){
@@ -176,7 +179,6 @@ public class Main {
                         }
                     }
 
-                    Executor exe = runnableExecutors.poll();
                     exe.execute(task, t);
                     break;
                 }
