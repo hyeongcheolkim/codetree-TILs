@@ -147,17 +147,23 @@ public class Main {
             // System.out.println(String.format("[exe]exe:%s task:%s", this, task));
         }
 
-        void done(int endTime){
+        boolean done(int endTime){
             if(this.task == null)
-                return;
+                return false;
             endTimes.put(task.domainHash, endTime);
             onExecutingDomains.remove(task.domainHash);
             this.task = null;
+            return true;
         }
 
         @Override
         public int compareTo(Executor exe){
             return Integer.compare(this.id, exe.id);
+        }
+
+        @Override
+        public boolean equals(Object o){
+            return this.id == ((Executor) o).id;
         }
 
         @Override
@@ -229,8 +235,10 @@ public class Main {
                 int J_id = Integer.parseInt(line[2]);
 
                 Executor exe = executors.get(J_id);
-                exe.done(t);
-                runnableExecutors.add(exe);
+                boolean isDone = exe.done(t);
+                
+                if(isDone)
+                    runnableExecutors.add(exe);
             }
 
             if(oper == 500){
