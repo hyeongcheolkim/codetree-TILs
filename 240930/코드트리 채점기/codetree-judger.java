@@ -12,11 +12,6 @@ public class Main {
     static Set<Task> onExecutingTasks = new HashSet<>();
     static PriorityQueue<Task> taskWaitQueue = new PriorityQueue<Task>();
 
-    static String extractDomainFromUrl(String url){
-        String[] tmp = url.split("/");
-        return tmp[0];
-    }
-
     static class DomainHash{
         private final static Map<String, Integer> m = new HashMap<>();
         private static Integer idx = 0;
@@ -36,12 +31,18 @@ public class Main {
         public String domain;
         public int enterQueueTime;
         public int domainHash;
+        public int number;
 
         Task(int p, String url, int enterQueueTime){
             this.p = p;
             this.url = url;
             this.enterQueueTime = enterQueueTime;
-            this.domain = extractDomainFromUrl(url);
+            
+            String[] tmp = url.split("/");
+
+            this.domain = tmp[0];
+            this.number = Integer.parseInt(tmp[1]);
+
             this.domainHash = DomainHash.of(domain);
         }
 
@@ -154,7 +155,7 @@ public class Main {
                 String u = line[3];
 
                 Task task = new Task(p, u, t);
-                if(taskWaitQueue.stream().anyMatch(x -> x.url.equals(u)))
+                if(taskWaitQueue.stream().anyMatch(x -> x.domainHash == task.domainHash && x.number == task.number))
                     continue;
                 taskWaitQueue.add(task);
             }
