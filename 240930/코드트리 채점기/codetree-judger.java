@@ -1,249 +1,252 @@
-import java.util.*;
-import java.util.stream.*;
-import java.io.*;
+import java.util.Scanner;
+import java.util.TreeSet;
+import java.util.TreeMap;
+import java.util.PriorityQueue;
+
+// 링크의 정보를 나타내는 클래스 선언
+class Url implements Comparable<Url> {
+    int tme, id;
+    int num;
+
+    public Url(int tme, int id, int num) {
+        this.tme = tme;
+        this.id = id;
+        this.num = num;
+    }
+
+    // 우선순위가 높은 url을 결정하기 위해 정렬함수를 만들어줍니다.
+    @Override
+    public int compareTo(Url url) {
+        if(this.id != url.id) return this.id - url.id;
+        return this.tme - url.tme;
+    }
+};
 
 public class Main {
+    public static final int MAX_D = 300;
+    public static final int MAX_N = 50000;
+    public static final int INF = 1987654321;
+    
+    public static int q;
+    public static int n;
+    
+    // 해당 도메인에서 해당 문제ID가 레디큐에 있는지 관리해줍니다.
+    public static TreeSet[] isInReadyq = new TreeSet[MAX_D + 1];
+    
+    // 현재 쉬고 있는 채점기들을 관리해줍니다.
+    public static PriorityQueue<Integer> restJudger = new PriorityQueue<>();
+    
+    // 각 채점기들이 채점할 때, 도메인의 인덱스를 저장합니다.
+    public static int[] judgingDomain = new int[MAX_N + 1];
+    
+    // 각 도메인별 start, gap, end(채점이 가능한 최소 시간)을 관리합니다.
+    public static int[] s = new int[MAX_D + 1];
+    public static int[] g = new int[MAX_D + 1];
+    public static int[] e = new int[MAX_D + 1];
+    
+    // 도메인을 관리하기 위해 cnt를 이용합니다.
+    // 도메인 문자열을 int로 변환해주는 map을 관리합니다.
+    public static TreeMap<String, Integer> domainToIdx = new TreeMap<>();
+    public static int cnt;
+    
+    // 현재 채점 대기 큐에 있는 task의 개수를 관리합니다.
+    public static int ans;
+    
+    // 각 도메인별로 priority queue를 만들어
+    // 우선순위가 가장 높은 url을 뽑아줍니다.
+    public static PriorityQueue<Url>[] urlPq = new PriorityQueue[MAX_D + 1];
+    
+    // 채점기를 준비합니다.
+    public static void init(Scanner sc) {
+        String url;
+        n = sc.nextInt();
+        url = sc.next();
+    
+        for(int i = 1; i <= n; i++) restJudger.add(i);
+    
+        // url에서 도메인 부분과 숫자 부분을 나누어줍니다.
+        int idx = 0;
+        for(int i = 0; i < url.length(); i++) {
+            if(url.charAt(i) == '/') idx = i;
+        }
+    
+        String domain = url.substring(0, idx);
+        Integer val = Integer.valueOf(url.substring(idx + 1));
+        int num = val;
+    
+        // 만약 도메인이 처음 나온 도메인이라면 domainToIdx에 갱신합니다.
+        if(!domainToIdx.containsKey(domain)) {
+            cnt++;
+            domainToIdx.put(domain, cnt);
+        }
+        int domainIdx = domainToIdx.get(domain);
+    
+        // 도메인 번호에 맞는 레디큐에 숫자 부분을 넣어줍니다.
+        isInReadyq[domainIdx].add(num);
+    
+        // 새로 들어온 url을 도메인에 맞춰 urlPq에 넣어줍니다.
+        Url newUrl = new Url(0, 1, num);
+        urlPq[domainIdx].add(newUrl);
+    
+        // 채점 대기 큐에 값이 추가됐으므로 개수를 1 추가합니다.
+        ans++;
+    }
+    
+    // 새로운 url을 입력받아 레디큐에 추가해줍니다.
+    public static void newUrl(Scanner sc) {
+        int tme, id;
+        String url;
+        tme = sc.nextInt();
+        id = sc.nextInt();
+        url = sc.next();
+    
+        // url에서 도메인 부분과 숫자 부분을 나누어줍니다.
+        int idx = 0;
+        for(int i = 0; i < url.length(); i++) {
+            if(url.charAt(i) == '/') idx = i;
+        }
+    
+        String domain = url.substring(0, idx);
+        Integer val = Integer.valueOf(url.substring(idx + 1));
+        int num = val;
 
-    BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-
-    static List<Executor> executors = new ArrayList<>();
-    static PriorityQueue<Executor> runnableExecutors = new PriorityQueue<>();
-
-    static Map<Integer, Integer> startTimes = new HashMap<>();
-    static Map<Integer, Integer> endTimes = new HashMap<>();
-    static Set<Integer> onExecutingDomains = new HashSet<>();
-
-    static class WaitTaskQueue{
-        static private Map<Integer, PriorityQueue<Task>> m = new HashMap<>();
-        static private int size = 0;
-
-        static public int size(){
-            return size;
+        // 만약 도메인이 처음 나온 도메인이라면 domainToIdx에 갱신합니다.
+        if(!domainToIdx.containsKey(domain)) {
+            cnt++;
+            domainToIdx.put(domain, cnt);
+        }
+        int domainIdx = domainToIdx.get(domain);
+    
+        // 만약 숫자 부분이 이미 레디큐에 있으면 중복되므로 넘어갑니다.
+        if(isInReadyq[domainIdx].contains(num)) {
+            return;
         }
 
-        static void print(){
-            for(Map.Entry<Integer, PriorityQueue<Task>> e : m.entrySet()){
-                int domainHash = e.getKey();
-                PriorityQueue<Task> pq = e.getValue();
-                pq.stream().forEach(x -> System.out.println(x));
-            }
-        }
-
-        static public void add(Task task){
-            PriorityQueue<Task> pq = m.computeIfAbsent(task.domainHash, (key) -> new PriorityQueue<Task>());
-            if(pq.contains(task))
-                return;
-            pq.add(task);
-            ++size;
-        }
-
-        static public Task poll(int time){
-            Task ret = null;
-            for(Map.Entry<Integer, PriorityQueue<Task>> e : m.entrySet()){
-                int domainHash = e.getKey();
-                PriorityQueue<Task> pq = e.getValue();
-
-                if(pq.isEmpty())
-                    continue;
-                if(onExecutingDomains.contains(domainHash))
-                    continue;
-
-                Integer startTime = startTimes.get(domainHash);
-                Integer endTime = endTimes.get(domainHash);
-                if(startTime != null && endTime != null){
-                    int gap = endTime - startTime;
-                    if(time < startTime + 3 * gap){
-                        continue;
-                    }
+        // 도메인 번호에 맞는 레디큐에 숫자 부분을 넣어줍니다.
+        isInReadyq[domainIdx].add(num);
+    
+        // 새로 들어온 url을 도메인에 맞춰 urlPq에 넣어줍니다.
+        Url newUrl = new Url(tme, id, num);
+        urlPq[domainIdx].add(newUrl);
+    
+        // 채점 대기 큐에 값이 추가됐으므로 개수를 1 추가합니다.
+        ans++;
+    }
+    
+    // 다음 도메인을 찾아 assign합니다.
+    public static void assign(Scanner sc) {
+        int tme;
+        tme = sc.nextInt();
+    
+        // 쉬고 있는 채점기가 없다면 넘어갑니다.
+        if(restJudger.isEmpty()) return;
+    
+        // 가장 우선순위가 높은 url을 찾습니다.
+        int minDomain = 0;
+        Url minUrl = new Url(0, INF, 0);
+    
+        for(int i = 1; i <= cnt; i++) {
+            // 만약 현재 채점중이거나, 현재 시간에 이용할 수 없다면 넘어갑니다.
+            if(e[i] > tme) continue;
+    
+            // 만약 i번 도메인에 해당하는 url이 존재한다면
+            // 해당 도메인에서 가장 우선순위가 높은 url을 뽑고 갱신해줍니다.
+            if(!urlPq[i].isEmpty()) {
+                Url curUrl = urlPq[i].peek();
+    
+                if(minUrl.id > curUrl.id || (minUrl.id == curUrl.id && minUrl.tme > curUrl.tme)) {
+                    minUrl = curUrl;
+                    minDomain = i;
                 }
-                Task task = pq.peek();
-                if(ret == null){
-                    ret = task;
-                    continue;
-                }
-                if(task.compareTo(ret) < 0){
-                    ret = task;
-                }
-                
             }
-            if(ret != null){
-                m.get(ret.domainHash).poll();
-                --size;
-            }
-            return ret;
+        }
+    
+        // 만약 가장 우선순위가 높은 url이 존재하면
+        // 해당 도메인과 쉬고 있는 가장 낮은 번호의 채점기를 연결해줍니다.
+        if(minDomain > 0) {
+            int judgerIdx = restJudger.peek(); restJudger.poll();
+    
+            // 해당 도메인의 가장 우선순위가 높은 url을 지웁니다.
+            urlPq[minDomain].poll();
+    
+            // 도메인의 start, end를 갱신해줍니다.
+            s[minDomain] = tme;
+            e[minDomain] = INF;
+    
+            // judgerIdx번 채점기가 채점하고 있는 도메인 번호를 갱신해줍니다.
+            judgingDomain[judgerIdx] = minDomain;
+    
+            // 레디큐에서 해당 url의 숫자를 지워줍니다.
+            isInReadyq[minDomain].remove(minUrl.num);
+    
+            // 채점 대기 큐에 값이 지워졌으므로 개수를 1 감소합니다.
+            ans--;
         }
     }
-
-    static class DomainHash{
-        private final static Map<String, Integer> m = new HashMap<>();
-        private static Integer idx = 0;
-
-        public static Integer of(String domain){
-            return m.computeIfAbsent(domain, (key)-> ++idx);
-        }
-
-        public static Integer of(Task task){
-            return m.computeIfAbsent(task.domain, (key)-> ++idx);
-        }
+    
+    // 채점 하나를 마무리합니다.
+    public static void finish(Scanner sc) {
+        int tme, id;
+        tme = sc.nextInt();
+        id = sc.nextInt();
+    
+        // 만약 id번 채점기가 채점 중이 아닐 경우 스킵합니다.
+        if(judgingDomain[id] == 0) return;
+    
+        // id번 채점기를 마무리합니다.
+        restJudger.add(id);
+        int domainIdx = judgingDomain[id];
+        judgingDomain[id] = 0;
+    
+        // 해당 도메인의 gap, end 값을 갱신해줍니다.
+        g[domainIdx] = tme - s[domainIdx];
+        e[domainIdx] = s[domainIdx] + 3 * g[domainIdx];
     }
-
-    static class Task implements Comparable<Task>{
-        public int p;
-        public String url;
-        public String domain;
-        public int enterQueueTime;
-        public int domainHash;
-        public int number;
-
-        Task(int p, String url, int enterQueueTime){
-            this.p = p;
-            this.url = url;
-            this.enterQueueTime = enterQueueTime;
-            
-            String[] tmp = url.split("/");
-
-            this.domain = tmp[0];
-            this.number = Integer.parseInt(tmp[1]);
-            this.domainHash = DomainHash.of(domain);
-        }
-
-
-        @Override
-        public boolean equals(Object o){
-            Task t = (Task) o;
-            return this.domainHash == t.domainHash && this.number == t.number;
-        }
-
-        @Override
-        public int compareTo(Task t){
-            if(this.p == t.p)
-                return this.enterQueueTime - t.enterQueueTime;
-            return this.p - t.p;
-        }
-
-        @Override
-        public String toString(){
-            return String.format("p:%s url:%s t:%d", p, url, enterQueueTime);
-        }
-    }
-
-    static class Executor implements Comparable<Executor>{
-        public Task task;
-
-        public Integer id;
-
-        Executor(Integer id){
-            this.id = id;
-        }
-
-        boolean isFree(){
-            return this.task == null;
-        }
-
-        void execute(Task task, int startTime){
-            this.task = task;
-            onExecutingDomains.add(task.domainHash);
-            startTimes.put(task.domainHash, startTime);
-            // System.out.println(String.format("[exe]exe:%s task:%s", this, task));
-        }
-
-        void done(int endTime){
-            if(this.task == null)
-                return;
-            endTimes.put(task.domainHash, endTime);
-            onExecutingDomains.remove(task.domainHash);
-            this.task = null;
-        }
-
-        @Override
-        public int compareTo(Executor exe){
-            return Integer.compare(this.id, exe.id);
-        }
-
-        @Override
-        public String toString(){
-            return String.format("id: Task:%s", this.id, this.task);
-        }
-    }
-
-    String readLine(){
-        try{
-            return br.readLine();
-        }catch(Exception e){
-            throw new RuntimeException(e);
-        }
-    }
-
-    int Q;
-
-    void solve(){
-        Q = Integer.parseInt(readLine());
-
-        while(Q-- != 0){
-            String[] line = readLine().split(" ");
-            int oper = Integer.parseInt(line[0]);
-
-            if(oper == 100){
-                int N = Integer.parseInt(line[1]);
-                String u0 = line[2];
-
-                executors = IntStream.range(0, N+1)
-                            .mapToObj((idx) -> new Executor(idx))
-                            .collect(Collectors.toList());
-                    
-                for(int i=1;i<=N;++i)
-                    runnableExecutors.add(executors.get(i));
-                
-                Task task = new Task(1, u0, 0);
-                WaitTaskQueue.add(task);
-                                // printTaskWaitQueue();
-            }
-
-            if(oper == 200){
-                int t = Integer.parseInt(line[1]);
-                int p = Integer.parseInt(line[2]);
-                String u = line[3];
-
-                Task task = new Task(p, u, t);
-                WaitTaskQueue.add(task);
-            }
-
-            if(oper == 300){
-                int t = Integer.parseInt(line[1]);
-
-                if(runnableExecutors.isEmpty())
-                    continue;
-                if(WaitTaskQueue.size() == 0)
-                    continue;
-
-                Task task = WaitTaskQueue.poll(t);
-                if(task == null){
-                    continue;
-                }
-
-                Executor exe = runnableExecutors.poll();
-                exe.execute(task, t);
-            }
-
-            if(oper == 400){
-                int t = Integer.parseInt(line[1]);
-                int J_id = Integer.parseInt(line[2]);
-
-                Executor exe = executors.get(J_id);
-                exe.done(t);
-                runnableExecutors.add(exe);
-            }
-
-            if(oper == 500){
-                int t = Integer.parseInt(line[1]);
-                System.out.println(WaitTaskQueue.size());
-            }
-
-        }
+    
+    // 현재 채점 대기 큐에 있는 url의 개수를 출력해줍니다.
+    public static void check(Scanner sc) {
+        int tme;
+        tme = sc.nextInt();
+    
+        System.out.print(ans + "\n");
     }
 
     public static void main(String[] args) {
-        Main main = new Main();
-        main.solve();
+        Scanner sc = new Scanner(System.in);
+        q = sc.nextInt();
+
+        for(int i = 1; i <= MAX_D; i++) {
+            urlPq[i] = new PriorityQueue<Url>();
+        }
+
+        for(int i = 1; i <= MAX_D; i++) {
+            isInReadyq[i] = new TreeSet<Integer>();
+        }
+
+        while(q-- > 0) {
+            int query;
+            query = sc.nextInt();
+
+            if(query == 100) {
+                // 채점기를 준비합니다.
+                init(sc);
+            }
+            if(query == 200) {
+                // 새로운 url을 입력받아 레디큐에 추가해줍니다.
+                newUrl(sc);
+            }
+            if(query == 300) {
+                // 다음 도메인을 찾아 assign합니다.
+                assign(sc);
+            }
+            if(query == 400) {
+                // 채점 하나를 마무리합니다.
+                finish(sc);
+            }
+            if(query == 500) {
+                // 현재 채점 대기 큐에 있는 url의 개수를 출력해줍니다.
+                check(sc);
+            }
+        }
     }
 }
