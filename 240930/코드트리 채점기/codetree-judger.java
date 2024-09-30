@@ -7,11 +7,15 @@ public class Main {
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
     static List<Executor> executors = new ArrayList<>();
-    static List<Task> taskWaitQueue = new ArrayList<>();
-
     static Map<Task, Integer> startTimes = new HashMap<>();
     static Map<Task, Integer> endTimes = new HashMap<>();
     static Set<Task> onExecutingTasks = new HashSet<>();
+    static PriorityQueue<Task> taskWaitQueue = new PriorityQueue<Task>();
+
+    static String extractDomainFromUrl(String url){
+        String[] tmp = url.split("/");
+        return tmp[0];
+    }
 
     static class DomainHash{
         private final static Map<String, Integer> m = new HashMap<>();
@@ -32,17 +36,13 @@ public class Main {
         public String domain;
         public int enterQueueTime;
         public int domainHash;
-        public int number;
 
         Task(int p, String url, int enterQueueTime){
             this.p = p;
             this.url = url;
             this.enterQueueTime = enterQueueTime;
+            this.domain = extractDomainFromUrl(url);
             this.domainHash = DomainHash.of(domain);
-
-            String[] tmp = url.split("/");
-            this.domain = tmp[0];
-            this.number = Integer.parseInt(tmp[1]);
         }
 
         @Override
@@ -52,7 +52,7 @@ public class Main {
 
         @Override
         public boolean equals(Object o){
-            return this.domainHash == ((Task)o).domainHash;
+            return this.domainHash == ((Task) o).domainHash;
         }
 
         @Override
@@ -108,6 +108,14 @@ public class Main {
     }
 
     void printTaskWaitQueue(){
+        List<Task> tmp = new ArrayList<>();
+
+        while(!taskWaitQueue.isEmpty()){
+            Task task = taskWaitQueue.poll();
+            System.out.println(task);
+            tmp.add(task);
+        }
+        taskWaitQueue.addAll(tmp);
     }
 
     String readLine(){
@@ -152,7 +160,7 @@ public class Main {
             }
 
             if(oper == 300){
-                final int t = Integer.parseInt(line[1]);
+                int t = Integer.parseInt(line[1]);
 
                 List<Executor> li = executors.stream()
                         .skip(1)
@@ -164,26 +172,32 @@ public class Main {
                     continue;
                 Executor exe = li.get(0);
 
-                List<Task> tasks = taskWaitQueue.stream()
-                            .filter(x -> {
-                                Integer s = startTimes.get(x);
-                                Integer e = endTimes.get(x);
-                                if(s != null && e != null){
-                                    int gap = e - s;
-                                    return !(t < s + 3 * gap);
-                                }
-                                return true;
-                            })
-                            .filter(x -> !onExecutingTasks.contains(x))
-                            .sorted()
-                            .collect(Collectors.toList());
-                if(tasks.isEmpty())
-                    continue;
-                Task targetTask = tasks.get(0);
-                taskWaitQueue = taskWaitQueue.stream()
-                                            .filter(x -> x.enterQueueTime != targetTask.enterQueueTime)
-                                            .collect(Collectors.toList());
-                exe.execute(targetTask, t);
+                List<Task> tmp = new ArrayList<>();
+                while(!taskWaitQueue.isEmpty()){
+                    Task task = taskWaitQueue.poll();
+
+                    if(onExecutingTasks.contains(task)){
+                        tmp.add(task);
+                        continue;
+                    }
+
+                    Integer s = startTimes.get(task);
+                    Integer e = endTimes.get(task);
+
+
+                    // System.out.println(String.format("task:%s s:%d e:%d", task, s, e));
+                    if(s != null && e != null){
+                        int gap = e - s;
+                        if(t < s + 3 * gap){
+                            tmp.add(task);
+                            continue;
+                        }
+                    }
+
+                    exe.execute(task, t);
+                    break;
+                }
+                taskWaitQueue.addAll(tmp);
             }
 
             if(oper == 400){
@@ -198,6 +212,7 @@ public class Main {
                 int t = Integer.parseInt(line[1]);
 
                 System.out.println(taskWaitQueue.size());
+                // printTaskWaitQueue();
             }
 
         }
