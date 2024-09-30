@@ -7,14 +7,23 @@ public class Main {
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
     static List<Executor> executors = new ArrayList<>();
+    static List<Task> taskWaitQueue = new ArrayList<>();
+
     static Map<Task, Integer> startTimes = new HashMap<>();
     static Map<Task, Integer> endTimes = new HashMap<>();
     static Set<Task> onExecutingTasks = new HashSet<>();
-    static List<Task> taskWaitQueue = new ArrayList<>();
 
-    static String extractDomainFromUrl(String url){
-        String[] tmp = url.split("/");
-        return tmp[0];
+    static class DomainHash{
+        private final static Map<String, Integer> m = new HashMap<>();
+        private static Integer idx = 0;
+
+        public static Integer of(String domain){
+            return m.computeIfAbsent(domain, (key)-> ++idx);
+        }
+
+        public static Integer of(Task task){
+            return m.computeIfAbsent(task.domain, (key)-> ++idx);
+        }
     }
 
     static class Task implements Comparable<Task>{
@@ -22,17 +31,23 @@ public class Main {
         public String url;
         public String domain;
         public int enterQueueTime;
+        public int domainHash;
+        public int number;
 
         Task(int p, String url, int enterQueueTime){
             this.p = p;
             this.url = url;
             this.enterQueueTime = enterQueueTime;
-            this.domain = extractDomainFromUrl(url);
+            this.domainHash = DomainHash.of(domain);
+
+            String[] tmp = url.split("/");
+            this.domain = tmp[0];
+            this.number = Integer.parseInt(tmp[1]);
         }
 
         @Override
         public int hashCode(){
-            return Objects.hash(domain);
+            return domainHash;
         }
 
         @Override
@@ -183,7 +198,6 @@ public class Main {
                 int t = Integer.parseInt(line[1]);
 
                 System.out.println(taskWaitQueue.size());
-                // printTaskWaitQueue();
             }
 
         }
