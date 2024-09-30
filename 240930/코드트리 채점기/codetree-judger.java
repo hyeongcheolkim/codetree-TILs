@@ -52,7 +52,7 @@ public class Main {
 
         @Override
         public boolean equals(Object o){
-            return this.domain.equals(((Task) o).domain);
+            return this.domainHash = ((Task)o).domainHash;
         }
 
         @Override
