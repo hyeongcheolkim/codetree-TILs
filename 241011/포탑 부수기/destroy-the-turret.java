@@ -44,6 +44,7 @@ public class Main {
     Map<Pos, Integer> recentTurns = new HashMap<>();
     int cnt = 0;
 
+
     Pos getWeakestTower(){
         List<Pos> targets = new ArrayList<>();
         int miniPower = Integer.MAX_VALUE / 2;
@@ -136,52 +137,55 @@ public class Main {
 
     static int[] dr = new int[]{0,+1,0,-1,-1,-1,+1,+1};
     static int[] dc = new int[]{+1,0,-1,0,+1,-1,+1,-1};
-    Deque<Pos> trace;
     List<Pos> traceResult;
-    boolean[][] vst;
+    
 
-    void dfs(int row, int col, Pos target){
-        
-        if(traceResult == null && target.row == row && target.col == col){
-            traceResult = new ArrayList<>(trace);
-            return;
-        }
-        if(traceResult != null && trace.size() < traceResult.size() && target.row == row && target.col == col){
-            traceResult = new ArrayList<>(trace);
-            return;
-        }
-        if(traceResult != null && traceResult.size() <= trace.size()){
-            return;
-        }
-        for(int direction=0;direction<4;++direction){
-            int nr = (row + dr[direction] + n) % n;
-            int nc = (col + dc[direction] + m) % m;
+    List<Pos> bfs(int row, int col, Pos target){
+        Queue<Pos> q = new ArrayDeque<>();
+        boolean[][] vst = new boolean[n][m];
 
-            if(vst[nr][nc])
-                continue;
-            if(board[nr][nc] == 0)
-                continue;
+        Pos[][] trace = new Pos[n][m];
+        q.add(new Pos(row,col));
+        vst[row][col] = true;
 
-            vst[nr][nc] = true;
-            trace.addLast(new Pos(nr, nc));
-            dfs(nr, nc, target);
-            trace.pollLast();
-            vst[nr][nc] = false;
+        while(!q.isEmpty() && trace[target.row][target.col] == null){
+            Pos p = q.poll();
+            int r = p.row;
+            int c = p.col;
+
+            for(int direction=0;direction<4;++direction){
+                int nr = (r + dr[direction] + n) % n;
+                int nc = (c + dc[direction] + m) % m;
+
+                if(vst[nr][nc])
+                    continue;
+                vst[nr][nc] = true;
+                trace[nr][nc] = new Pos(r,c);
+                q.add(new Pos(nr, nc));
+            } 
         }
+
+        if(trace[target.row][target.col] == null)
+            return null;
+
+        List<Pos> ret = new ArrayList<>();
+        Pos p = new Pos(target.row, target.col);
+        while(p != null){
+            ret.add(p);
+            p = trace[p.row][p.col];
+        }
+        return ret;
     }
 
     void razorAttack(Pos from, Pos to){
-        trace = new ArrayDeque<>();
-        vst = new boolean[n][m];
-        traceResult = null;
+        traceResult = bfs(from.row, from.col, to);
 
-        vst[from.row][from.col] = true;
-        dfs(from.row, from.col, to);
         if(traceResult == null)
             return;
 
+        // System.out.println(traceResult);
         int damage = board[from.row][from.col];
-        for(int i=0;i<traceResult.size() - 1;++i){
+        for(int i=1;i<traceResult.size()-1;++i){
             Pos p = traceResult.get(i);
             if(board[p.row][p.col] == 0)
                 continue;
@@ -190,16 +194,14 @@ public class Main {
                 --cnt;
         }
 
-        Pos lastP = traceResult.get(traceResult.size() - 1);
-        if(board[lastP.row][lastP.col] == 0)
+        Pos firstP = traceResult.get(0);
+        if(board[firstP.row][firstP.col] == 0)
             return;
-        board[lastP.row][lastP.col] = Integer.max(0, board[lastP.row][lastP.col] - damage);
-        if(board[lastP.row][lastP.col] == 0)
+        board[firstP.row][firstP.col] = Integer.max(0, board[firstP.row][firstP.col] - damage);
+        if(board[firstP.row][firstP.col] == 0)
             --cnt;
 
         List<Pos> blackList = new ArrayList<>(traceResult);
-        blackList.add(from);
-        blackList.add(to);
         repair(blackList);
     }
 
@@ -277,6 +279,7 @@ public class Main {
 
         for(int i=1;i<=k && cnt >= 2;++i){
             takeTurn(i);
+            // printBoard();
         }
 
         Pos strongest = getStrongestTower();
