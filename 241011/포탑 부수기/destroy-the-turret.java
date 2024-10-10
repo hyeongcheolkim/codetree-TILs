@@ -149,6 +149,9 @@ public class Main {
             traceResult = new ArrayList<>(trace);
             return;
         }
+        if(traceResult != null && traceResult.size() <= trace.size()){
+            return;
+        }
         for(int direction=0;direction<4;++direction){
             int nr = (row + dr[direction] + n) % n;
             int nc = (col + dc[direction] + m) % m;
