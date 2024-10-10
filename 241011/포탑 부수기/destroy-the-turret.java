@@ -159,6 +159,8 @@ public class Main {
 
                 if(vst[nr][nc])
                     continue;
+                if(board[nr][nc] == 0)
+                    continue;
                 vst[nr][nc] = true;
                 trace[nr][nc] = new Pos(r,c);
                 q.add(new Pos(nr, nc));
@@ -242,6 +244,7 @@ public class Main {
         if(board[r][c] == 0)
             --cnt;
         
+        // System.out.println(blackList);
         repair(blackList);
     }
 
