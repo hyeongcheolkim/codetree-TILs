@@ -227,6 +227,8 @@ public class Main {
             int nc = (c + dc[direction] + m) % m;
             if(board[nr][nc] == 0)
                 continue;
+            if(from.row == nr && from.col == nc)
+                continue;
             board[nr][nc] = Integer.max(0, board[nr][nc] - damage / 2);
             if(board[nr][nc] == 0)
                 --cnt;
