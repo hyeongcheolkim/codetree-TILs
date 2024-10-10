@@ -141,6 +141,7 @@ public class Main {
     boolean[][] vst;
 
     void dfs(int row, int col, Pos target){
+        
         if(traceResult == null && target.row == row && target.col == col){
             traceResult = new ArrayList<>(trace);
             return;
@@ -180,7 +181,7 @@ public class Main {
             return;
 
         int damage = board[from.row][from.col];
-        for(int i=0;i<traceResult.size();++i){
+        for(int i=0;i<traceResult.size() - 1;++i){
             Pos p = traceResult.get(i);
             if(board[p.row][p.col] == 0)
                 continue;
@@ -189,8 +190,11 @@ public class Main {
                 --cnt;
         }
 
-        board[to.row][to.col] = Integer.max(0, board[to.row][to.col] - damage);
-        if(board[to.row][to.col] == 0)
+        Pos lastP = traceResult.get(traceResult.size() - 1);
+        if(board[lastP.row][lastP.col] == 0)
+            return;
+        board[lastP.row][lastP.col] = Integer.max(0, board[lastP.row][lastP.col] - damage);
+        if(board[lastP.row][lastP.col] == 0)
             --cnt;
 
         List<Pos> blackList = new ArrayList<>(traceResult);
