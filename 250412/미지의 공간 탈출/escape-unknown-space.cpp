@@ -11,8 +11,7 @@ vector<vector<int>> base, flat;
 pair<int,int> dot1, dot2;
 const pair<int,int> OUT_OF_BOUND = pair<int,int>{-5, -5};
 
-unordered_map<int, int> error_direction;
-unordered_map<int, vector<int>> error_turn;
+vector<tuple<int,int,int,int>> errors;
 
 const int dr[]{0,0,+1,-1}, dc[]{+1,-1,0,0};
 
@@ -250,29 +249,26 @@ int escape()
     int turn = 1;
     while(!q.empty())
     {
-        for(const auto& et : error_turn[turn])
+        decltype(errors) next_errors;
+        for(const auto&[r, c, d, v] : errors)
         {
-            int d = error_direction[et];
-            vector<pair<int,int>> target;
-            for(int i=0;i<SIZE;++i)
-                for(int j=0;j<SIZE;++j)
-                {
-                    if(flat[i][j] == et)
-                    {
-                        auto ret = nextPos(i, j, d);
-                        if(ret == OUT_OF_BOUND)
-                            continue;
-                        auto[nr, nc] = ret;
-                        if(flat[nr][nc] == 1)
-                            continue;
-                        if(flat[nr][nc] == 4)
-                            continue;
-                        target.push_back(ret);
-                    }
-                }
-            for(const auto&[r,c] : target)
-                flat[r][c]  = et;
-        }   
+            if((turn % v) != 0)
+            {
+                next_errors.emplace_back(r, c, d, v);
+                continue;
+            }
+            auto ret = nextPos(r, c, d);
+            if(ret == OUT_OF_BOUND)
+                continue;
+            auto[nr, nc] = ret;
+            if(flat[nr][nc] == 1)
+                continue;
+            if(flat[nr][nc] == 4)
+                continue;
+            flat[nr][nc] = -1;
+            next_errors.emplace_back(nr, nc, d, v);
+        }
+        errors = next_errors;
 
         decltype(q) tmpq;
         while(!q.empty())
@@ -366,18 +362,12 @@ int main()
     for(int i=0;i<f;++i)
     {
         int r, c, d, v;
-        int idx = -(i+1);
         cin >> r >> c >> d >> v;
         auto[row,col] = getPos(r, c);
-        flat[row][col] = idx;
-
-        error_direction[idx] = d;
-        error_turn[v].push_back(idx);
+        flat[row][col] = -1;
+        errors.emplace_back(row, col, d, v);
     }
-    // printSpace(flat);
-    cout << escape();
 
-    
-    // auto[row, col] = nextPos(7, 2, 2);
+    cout << escape();
     return 0;
 }
