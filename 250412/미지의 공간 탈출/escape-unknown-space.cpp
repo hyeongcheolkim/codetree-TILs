@@ -265,6 +265,8 @@ int escape()
                         auto[nr, nc] = ret;
                         if(flat[nr][nc] == 1)
                             continue;
+                        if(flat[nr][nc] == 4)
+                            continue;
                         target.push_back(ret);
                     }
                 }
